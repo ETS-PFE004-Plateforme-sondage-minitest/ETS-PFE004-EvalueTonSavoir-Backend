@@ -1,5 +1,6 @@
 const socketIo = require('socket.io');
 const configs = require('../configs/config');
+const socketController = require('../controllers/socketController');
 
 const setupWebsocket = (server) => {
     const io = socketIo(server, {
@@ -14,15 +15,29 @@ const setupWebsocket = (server) => {
     io.on('connection', (socket) => {
         console.log('A user connected:', socket.id);
 
-        socket.on('join-room', (enteredPassword) => {
-            if (enteredPassword === configs.getPassword()) {
-                console.log("connection successful")
+        socket.on('create-room', () => {
+            const  roomName = socketController.generateRoomName();
+            if(!io.sockets.adapter.rooms.get(roomName)){
+                socket.join(roomName);
+                socket.emit('create-success', roomName);
+            }
+            else{
+                socket.emit('create-failure');
+            }
+        });
+
+
+        socket.on('join-room', ({enteredRoomName, username}) => {
+            if (io.sockets.adapter.rooms.has(enteredRoomName)) {
+                socket.join(enteredRoomName);
+                console.log(`User ${socket.id} joined room: ${enteredRoomName}`);
+                socket.to(enteredRoomName).emit('user-joined', username);
                 socket.emit('join-success');
-                // Do other things like maybe adding the user to a specific room
             } else {
                 socket.emit('join-failure');
             }
         });
+
         socket.on('message', (data) => {
             console.log('Received message from', socket.id, ':', data);
         });
