@@ -22,7 +22,7 @@ const setupWebsocket = (server) => {
                 socket.emit('create-success', roomName);
             }
             else{
-                socket.emit('create-failure');
+                socket.emit('create-failure'); //TODO - handle (backend and frontend) create-failure
             }
         });
 
@@ -36,6 +36,14 @@ const setupWebsocket = (server) => {
             } else {
                 socket.emit('join-failure');
             }
+        });
+
+        socket.on('next-question', ({roomName, question}) => {
+            socket.to(roomName).emit('next-question', question);
+        });
+
+        socket.on('end-quiz',({roomName}) => {
+            socket.to(roomName).emit('end-quiz');
         });
 
         socket.on('message', (data) => {
