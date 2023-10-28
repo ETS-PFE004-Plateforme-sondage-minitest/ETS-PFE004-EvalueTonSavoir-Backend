@@ -53,6 +53,10 @@ const setupWebsocket = (server) => {
         socket.on('disconnect', () => {
             console.log('A user disconnected:', socket.id);
         });
+
+        socket.on("submit-answer", ({roomName, username, answer}) => {
+            socket.to(roomName).emit('submit-answer', {username, answer});
+        });
     });
 }
 
