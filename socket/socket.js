@@ -1,6 +1,4 @@
 const socketIo = require('socket.io');
-const configs = require('../configs/config');
-const socketController = require('../controllers/socketController');
 
 const setupWebsocket = (server) => {
     const io = socketIo(server, {
@@ -16,7 +14,7 @@ const setupWebsocket = (server) => {
         console.log('A user connected:', socket.id);
 
         socket.on('create-room', () => {
-            const  roomName = socketController.generateRoomName();
+            const  roomName = generateRoomName();
             if(!io.sockets.adapter.rooms.get(roomName)){
                 socket.join(roomName);
                 socket.emit('create-success', roomName);
@@ -58,6 +56,16 @@ const setupWebsocket = (server) => {
             socket.to(roomName).emit('submit-answer', {username, answer});
         });
     });
+
+
+    const generateRoomName = (length = 6) => {
+        const characters = 'ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    };
 }
 
 module.exports = { setupWebsocket };
