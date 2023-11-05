@@ -38,6 +38,10 @@ const setupWebsocket = (server) => {
       socket.to(roomName).emit("next-question", question);
     });
 
+    socket.on("launch-student-mode", ({ roomName, questions }) => {
+      socket.to(roomName).emit("launch-student-mode", questions);
+    });
+
     socket.on("end-quiz", ({ roomName }) => {
       socket.to(roomName).emit("end-quiz");
     });
