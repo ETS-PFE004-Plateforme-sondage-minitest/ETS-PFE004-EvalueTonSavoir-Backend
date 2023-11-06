@@ -1,32 +1,32 @@
-const socketIo = require("socket.io");
-
-const setupWebsocket = (server) => {
-  const io = socketIo(server, {
-    path: "/socket.io",
-    cors: {
-      origin: "*",
-      methods: ["GET", "POST"],
-      credentials: true,
-    },
-  });
-
+const setupWebsocket = (io) => {
   io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
-    socket.on("create-room", () => {
-      const roomName = generateRoomName();
-      if (!io.sockets.adapter.rooms.get(roomName)) {
-        socket.join(roomName);
-        socket.emit("create-success", roomName);
+    socket.on("create-room", (sentRoomName) => {
+      if (sentRoomName) {
+        const roomName = sentRoomName.toUpperCase();
+        if (!io.sockets.adapter.rooms.get(roomName)) {
+          socket.join(roomName);
+          socket.emit("create-success", roomName);
+        } else {
+          socket.emit("create-failure");
+        }
       } else {
-        socket.emit("create-failure"); //TODO - handle (backend and frontend) create-failure
+        const roomName = generateRoomName();
+        if (!io.sockets.adapter.rooms.get(roomName)) {
+          socket.join(roomName);
+          socket.emit("create-success", roomName);
+        } else {
+          socket.emit("create-failure");
+        }
       }
     });
 
     socket.on("join-room", ({ enteredRoomName, username }) => {
+      console.log("coucou");
+      console.log(io.sockets.adapter.rooms);
       if (io.sockets.adapter.rooms.has(enteredRoomName)) {
         socket.join(enteredRoomName);
-        console.log(`User ${socket.id} joined room: ${enteredRoomName}`);
         socket.to(enteredRoomName).emit("user-joined", username);
         socket.emit("join-success");
       } else {
@@ -35,6 +35,7 @@ const setupWebsocket = (server) => {
     });
 
     socket.on("next-question", ({ roomName, question }) => {
+      console.log("next-question", roomName, question);
       socket.to(roomName).emit("next-question", question);
     });
 
