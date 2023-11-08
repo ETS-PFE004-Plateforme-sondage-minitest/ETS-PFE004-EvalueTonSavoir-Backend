@@ -15,6 +15,6 @@ jobs:
           SOURCE_REPO: "https://github.com/ETS-PFE004-Plateforme-sondage-minitest/ETS-PFE004-EvalueTonSavoir-Backend.git"
           SOURCE_BRANCH: "glitch"
           DESTINATION_REPO: ${{ secrets.GLITCH_GIT_URL }}
-          DESTINATION_BRANCH: "master"
+          DESTINATION_BRANCH: "main"
         with:
           args: $SOURCE_REPO $SOURCE_BRANCH $DESTINATION_REPO $DESTINATION_BRANCH
