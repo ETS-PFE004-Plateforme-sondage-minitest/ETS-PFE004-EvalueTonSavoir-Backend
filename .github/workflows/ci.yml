@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: repo-sync
-        uses: wei/git-sync@v1
+        uses: wei/git-sync@v3
         env:
           SOURCE_REPO: "https://github.com/ETS-PFE004-Plateforme-sondage-minitest/ETS-PFE004-EvalueTonSavoir-Backend.git"
           SOURCE_BRANCH: "glitch"
