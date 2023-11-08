@@ -6,16 +6,15 @@ on:
       - glitch
 
 jobs:
-  deploy:
+  repo-sync:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Deploy to Glitch
-        run: |
-          curl -X POST "https://api.glitch.com/v1/projects/${{ secrets.GLITCH_ID }}/git/commit/glitch" \-H "Authorization: Bearer ${{ secrets.GLITCH_TOKEN }}"
+      - name: repo-sync
+        uses: wei/git-sync@v1
         env:
-          GLITCH_TOKEN: ${{ secrets.GLITCH_TOKEN }}
-          GLITCH_ID: ${{ secrets.GLITCH_ID }}
+          SOURCE_REPO: "https://github.com/ETS-PFE004-Plateforme-sondage-minitest/ETS-PFE004-EvalueTonSavoir-Backend.git"
+          SOURCE_BRANCH: "glitch"
+          DESTINATION_REPO: ${{ secrets.GLITCH_GIT_URL }}
+          DESTINATION_BRANCH: "master"
+        with:
+          args: $SOURCE_REPO $SOURCE_BRANCH $DESTINATION_REPO $DESTINATION_BRANCH
