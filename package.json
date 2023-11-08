@@ -2,11 +2,11 @@
   "name": "ets-pfe004-evaluetonsavoir-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "./src/app.js",
+  "main": "app.js",
   "scripts": {
     "build": "webpack --config webpack.config.js",
-    "start": "node ./src/app.js",
-    "dev": "nodemon ./src/app.js",
+    "start": "node app.js",
+    "dev": "nodemon app.js",
     "test": "jest"
   },
   "keywords": [],
