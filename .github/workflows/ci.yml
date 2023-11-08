@@ -2,22 +2,20 @@ name: Glitch Deployment
 
 on:
   push:
-    branches:     
-      glitch 
+    branches:
+      - glitch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      
-name: Checkout Repository
-      uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-      
-name: Deploy to Glitch
-      run: |
-        curl -X POST "https://api.glitch.com/v1/projects/${{ secrets.GLITCH_ID }}/git/commit/glitch" \-H "Authorization: Bearer ${{ secrets.GLITCH_TOKEN }}"
-      env:
-        GLITCH_TOKEN: ${{ secrets.GLITCH_TOKEN }}
-        GLITCH_ID : ${{ secrets.GLITCH_ID }}	
+      - name: Deploy to Glitch
+        run: |
+          curl -X POST "https://api.glitch.com/v1/projects/${{ secrets.GLITCH_ID }}/git/commit/glitch" \-H "Authorization: Bearer ${{ secrets.GLITCH_TOKEN }}"
+        env:
+          GLITCH_TOKEN: ${{ secrets.GLITCH_TOKEN }}
+          GLITCH_ID: ${{ secrets.GLITCH_ID }}
