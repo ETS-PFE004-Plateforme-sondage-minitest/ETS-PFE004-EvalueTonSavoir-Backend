@@ -11,10 +11,8 @@ jobs:
     steps:
       - name: repo-sync
         uses: wei/git-sync@v3
-        env:
-          SOURCE_REPO: "https://github.com/ETS-PFE004-Plateforme-sondage-minitest/ETS-PFE004-EvalueTonSavoir-Backend.git"
-          SOURCE_BRANCH: "glitch"
-          DESTINATION_REPO: ${{ secrets.GLITCH_GIT_URL }}
-          DESTINATION_BRANCH: "main"
         with:
-          args: $SOURCE_REPO $SOURCE_BRANCH $DESTINATION_REPO $DESTINATION_BRANCH
+          source_repo: "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          source_branch: "glitch"
+          destination_repo: ${{ secrets.GLITCH_GIT_URL }}
+          destination_branch: "main"
