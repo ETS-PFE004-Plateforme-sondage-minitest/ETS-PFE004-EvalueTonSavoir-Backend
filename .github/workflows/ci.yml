@@ -3,7 +3,7 @@ name: Glitch Deployment
 on:
   push:
     branches:     
-      main 
+      glitch 
 
 jobs:
   deploy:
@@ -17,6 +17,7 @@ name: Checkout Repository
       
 name: Deploy to Glitch
       run: |
-        curl -X POST "https://api.glitch.com/v1/projects/<your-project-id>/git/commit/<your-branch-name>" \-H "Authorization: Bearer <your-glitch-token>"
+        curl -X POST "https://api.glitch.com/v1/projects/${{ secrets.GLITCH_ID }}/git/commit/glitch" \-H "Authorization: Bearer ${{ secrets.GLITCH_TOKEN }}"
       env:
         GLITCH_TOKEN: ${{ secrets.GLITCH_TOKEN }}
+        GLITCH_ID : ${{ secrets.GLITCH_ID }}	

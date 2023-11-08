@@ -15,6 +15,7 @@ const configureServer = (httpServer) => {
     },
   });
 };
+//coucou
 
 const server = http.createServer(app);
 const io = configureServer(server);
