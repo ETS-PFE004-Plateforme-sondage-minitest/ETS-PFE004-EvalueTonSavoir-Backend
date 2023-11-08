@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ets-websocket-backend
+    ports:
+      - "4400:4400"
+    environment:
+      - NODE_ENV=production
+    command: npm start

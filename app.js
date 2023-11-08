@@ -1,8 +1,7 @@
 const express = require("express");
 const app = express();
 const http = require("http");
-const { setupWebsocket } = require("./socket/socket");
-const bodyParser = require("body-parser");
+const { setupWebsocket } = require("./src/socket/socket");
 const cors = require("cors");
 const { Server } = require("socket.io");
 
@@ -16,13 +15,13 @@ const configureServer = (httpServer) => {
     },
   });
 };
+//coucou
 
 const server = http.createServer(app);
 const io = configureServer(server);
 
 setupWebsocket(io);
 app.use(cors());
-app.use(bodyParser.json());
 
 const port = process.env.PORT || 4400;
 server.listen(port, () => {
