@@ -8,14 +8,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    - name: Checkout code
-      uses: actions/checkout@v2
-    
-    - name: Install dependencies
-      run: npm install
- 
-    - name: run tests
-      run: npm test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: run tests
+        run: npm test
 
   repo-sync:
     runs-on: ubuntu-latest
