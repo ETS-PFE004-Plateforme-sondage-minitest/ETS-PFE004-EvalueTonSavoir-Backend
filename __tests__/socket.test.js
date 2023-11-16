@@ -130,6 +130,20 @@ describe("websocket server", () => {
     });
   });
 
+  test("should not join a room if no room name is provided", (done) => {
+    studentSocket.emit("join-room", { enteredRoomName: "", username: "student1" });
+    studentSocket.on("join-failure", () => {
+      done();
+    });
+  });
+  
+  test("should not join a room if the username is not provided", (done) => {
+    studentSocket.emit("join-room", { enteredRoomName: "ROOM2", username: "" });
+    studentSocket.on("join-failure", () => {
+      done();
+    });
+  });
+  
   test("should end quiz", (done) => {
     teacherSocket.emit("end-quiz", {
       roomName: "ROOM1",
