@@ -1,6 +1,27 @@
+const MAX_USERS_PER_ROOM = 60;
+const MAX_TOTAL_CONNECTIONS = 2000;
+
 const setupWebsocket = (io) => {
+  let totalConnections = 0;
+
   io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
+    if (totalConnections >= MAX_TOTAL_CONNECTIONS) {
+      console.log("Connection limit reached. Disconnecting client.");
+      socket.emit(
+        "join-failure",
+        "Le nombre maximum de connexion a été atteint"
+      );
+      socket.disconnect(true);
+      return;
+    }
+
+    totalConnections++;
+    console.log(
+      "A user connected:",
+      socket.id,
+      "| Total connections:",
+      totalConnections
+    );
 
     socket.on("create-room", (sentRoomName) => {
       if (sentRoomName) {
@@ -23,14 +44,21 @@ const setupWebsocket = (io) => {
     });
 
     socket.on("join-room", ({ enteredRoomName, username }) => {
-      console.log("coucou");
-      console.log(io.sockets.adapter.rooms);
       if (io.sockets.adapter.rooms.has(enteredRoomName)) {
-        socket.join(enteredRoomName);
-        socket.to(enteredRoomName).emit("user-joined", username);
-        socket.emit("join-success");
+        const clientsInRoom =
+          io.sockets.adapter.rooms.get(enteredRoomName).size;
+
+        if (clientsInRoom <= MAX_USERS_PER_ROOM) {
+          socket.join(enteredRoomName);
+          socket
+            .to(enteredRoomName)
+            .emit("user-joined", { name: username, id: socket.id });
+          socket.emit("join-success");
+        } else {
+          socket.emit("join-failure", "La salle est remplie");
+        }
       } else {
-        socket.emit("join-failure");
+        socket.emit("join-failure", "Le nom de la salle n'existe pas");
       }
     });
 
@@ -52,13 +80,28 @@ const setupWebsocket = (io) => {
     });
 
     socket.on("disconnect", () => {
-      console.log("A user disconnected:", socket.id);
+      totalConnections--;
+      console.log(
+        "A user disconnected:",
+        socket.id,
+        "| Total connections:",
+        totalConnections
+      );
+
+      for (const [room] of io.sockets.adapter.rooms) {
+        if (room !== socket.id) {
+          io.to(room).emit("user-disconnected", socket.id);
+        }
+      }
     });
 
     socket.on("submit-answer", ({ roomName, username, answer, idQuestion }) => {
-      socket
-        .to(roomName)
-        .emit("submit-answer", { username, answer, idQuestion });
+      socket.to(roomName).emit("submit-answer", {
+        idUser: socket.id,
+        username,
+        answer,
+        idQuestion,
+      });
     });
   });
 
