@@ -16,7 +16,7 @@ describe("websocket server", () => {
   beforeAll((done) => {
     const httpServer = http.createServer();
     ioServer = new Server(httpServer, {
-      path: "",
+      path: "/socket.io",
       cors: {
         origin: "*",
         methods: ["GET", "POST"],
@@ -41,6 +41,7 @@ describe("websocket server", () => {
   });
 
   test("should connect to the server", (done) => {
+    expect(false).toBe(true);
     teacherSocket = new Client(BACKEND_API, {
       path: "/socket.io",
       transports: ["websocket"],
