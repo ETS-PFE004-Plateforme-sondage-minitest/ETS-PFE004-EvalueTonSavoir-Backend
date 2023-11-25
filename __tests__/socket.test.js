@@ -41,7 +41,6 @@ describe("websocket server", () => {
   });
 
   test("should connect to the server", (done) => {
-    expect(false).toBe(true);
     teacherSocket = new Client(BACKEND_API, {
       path: "/socket.io",
       transports: ["websocket"],
