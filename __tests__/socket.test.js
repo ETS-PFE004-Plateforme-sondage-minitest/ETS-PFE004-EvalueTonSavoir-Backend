@@ -16,7 +16,7 @@ describe("websocket server", () => {
   beforeAll((done) => {
     const httpServer = http.createServer();
     ioServer = new Server(httpServer, {
-      path: "/socket.io",
+      path: "",
       cors: {
         origin: "*",
         methods: ["GET", "POST"],
