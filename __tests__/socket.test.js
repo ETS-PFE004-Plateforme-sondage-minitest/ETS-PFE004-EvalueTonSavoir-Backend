@@ -5,6 +5,11 @@ const { setupWebsocket } = require("../src/socket/socket");
 
 process.env.NODE_ENV = "test";
 
+const BACKEND_PORT = 4400;
+const BACKEND_URL = "http://localhost";
+
+const BACKEND_API = `${BACKEND_URL}:${BACKEND_PORT}`;
+
 describe("websocket server", () => {
   let ioServer, server, teacherSocket, studentSocket;
 
@@ -19,7 +24,7 @@ describe("websocket server", () => {
       },
     });
     setupWebsocket(ioServer);
-    server = httpServer.listen(4400, () => done());
+    server = httpServer.listen(BACKEND_PORT, () => done());
   });
 
   afterAll(() => {
@@ -36,11 +41,11 @@ describe("websocket server", () => {
   });
 
   test("should connect to the server", (done) => {
-    teacherSocket = new Client("http://localhost:4400", {
+    teacherSocket = new Client(BACKEND_API, {
       path: "/socket.io",
       transports: ["websocket"],
     });
-    studentSocket = new Client("http://localhost:4400", {
+    studentSocket = new Client(BACKEND_API, {
       path: "/socket.io",
       transports: ["websocket"],
     });
@@ -132,19 +137,22 @@ describe("websocket server", () => {
   });
 
   test("should not join a room if no room name is provided", (done) => {
-    studentSocket.emit("join-room", { enteredRoomName: "", username: "student1" });
+    studentSocket.emit("join-room", {
+      enteredRoomName: "",
+      username: "student1",
+    });
     studentSocket.on("join-failure", () => {
       done();
     });
   });
-  
+
   test("should not join a room if the username is not provided", (done) => {
     studentSocket.emit("join-room", { enteredRoomName: "ROOM2", username: "" });
     studentSocket.on("join-failure", () => {
       done();
     });
   });
-  
+
   test("should end quiz", (done) => {
     teacherSocket.emit("end-quiz", {
       roomName: "ROOM1",
