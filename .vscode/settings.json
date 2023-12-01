@@ -1,0 +1,4 @@
+{
+  "appService.defaultWebAppToDeploy": "/subscriptions/15c53840-b797-4722-921a-0c8a99c037d2/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/EvalueTonSavoirBackend",
+  "appService.deploySubpath": "."
+}
