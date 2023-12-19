@@ -54,7 +54,6 @@ const setupWebsocket = (io) => {
             .to(enteredRoomName)
             .emit("user-joined", { name: username, id: socket.id });
           socket.emit("join-success");
-          console.log("user-joined", username, socket.id);
         } else {
           socket.emit("join-failure", "La salle est remplie");
         }
