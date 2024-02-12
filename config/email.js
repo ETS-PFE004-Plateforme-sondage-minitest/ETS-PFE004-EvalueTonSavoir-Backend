@@ -6,10 +6,10 @@ dotenv.config();
 class Emailer {
 
     constructor() {
-        this.senderEmail = process.env.SenderEmail;
-        this.psw = process.env.MONGO_DATABASE;
+        this.senderEmail = process.env.SENDER_EMAIL;
+        this.psw = process.env.EMAIL_PSW;
         this.transporter = nodemailer.createTransport({
-            service: 'gmail',
+            service: process.env.EMAIL_SERVICE,
             auth: {
                 user: this.senderEmail,
                 pass: this.psw
