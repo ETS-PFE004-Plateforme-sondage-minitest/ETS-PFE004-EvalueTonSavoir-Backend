@@ -1,2 +1,3 @@
-`npm run dev` to run the project with hot reload
-`npm test` to run the tests
+# Bienvenue sur le Backend d'EvalueTonSavoir !
+
+See project wiki [here](https://github.com/louis-antoine-etsmtl/EvalueTonSavoir/wiki)
