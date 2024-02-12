@@ -1,12 +1,26 @@
+// Import modules
 const express = require("express");
-const app = express();
 const http = require("http");
-const { setupWebsocket } = require("./src/socket/socket");
-const cors = require("cors");
+const dotenv = require('dotenv')
+
+
+const { setupWebsocket } = require("./socket/socket");
 const { Server } = require("socket.io");
 const nodemailer = require('nodemailer');
 const { MongoClient } = require('mongodb');
 const { ObjectId } = require('mongodb');
+
+//import routers
+const userRouter = require('./routers/users.js');
+const folderRouter = require('./routers/folders.js');
+const quizRouter = require('./routers/quiz.js');
+
+// Setup environement
+dotenv.config();
+
+// Start app
+const app = express();
+const cors = require("cors");
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 
@@ -21,8 +35,61 @@ const configureServer = (httpServer) => {
   });
 };
 
+
+// Start sockets
 const server = http.createServer(app);
 const io = configureServer(server);
+
+setupWebsocket(io);
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+
+// Create routes
+app.use('/user', userRouter);
+app.use('/folder', folderRouter);
+app.use('/quiz', quizRouter);
+
+
+// Start server
+const port = process.env.PORT || 4400;
+server.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////
+// TO DELETE THE REST HERE WHEN IT IS MOVED OVER
+/////////////////////////////////////////////////////
+
+
+
 const uri = 'mongodb://localhost:27017';
 const client = new MongoClient(uri);
 // Connexion à MongoDB
@@ -44,15 +111,11 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-setupWebsocket(io);
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
-const port = process.env.PORT || 4400;
-server.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-}); // connection au port  du serveur
+
+
+
+
 
 //Fonction pour enregistrer un nouvel usager 
 app.post('/register', async (req, res) => {
