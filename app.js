@@ -89,36 +89,6 @@ server.listen(port, () => {
 /////////////////////////////////////////////////////
 
 
-//Fonction pour changer le mot de passe 
-app.post('/change-password', async (req, res) => {
-  const { email, oldPassword, newPassword } = req.body;
-
-  try {
-    //Trouver l'utilisateur
-    const user = await usersCollection.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur non trouvé' });
-    }
-    //comparer le mot de passe actuel avec celui donner par l'utilisateur
-    const passwordMatch = await bcrypt.compare(oldPassword, user.password);
-    if (!passwordMatch) {
-      return res.status(401).json({ message: 'L\'ancien mot de passe est incorrect' });
-    }
-    // Hasher le nouveau mot de passe
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-    //Chnager le mot de passe dans la BD
-    await usersCollection.updateOne({ email }, { $set: { password: hashedNewPassword } });
-
-    res.status(200).json({ message: 'Mot de passe changé avec succès' });
-
-  } catch (error) {
-
-    console.error('Erreur lors du changement de mot de passe :', error);
-    res.status(500).json({ message: 'Erreur interne du serveur' });
-
-  }
-});
 
 //fonction de création de folder (quiz)
 app.post('/create-folder', async (req, res) => {
