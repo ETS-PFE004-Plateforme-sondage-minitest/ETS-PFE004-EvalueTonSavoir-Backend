@@ -82,120 +82,12 @@ server.listen(port, () => {
 
 
 
-
+/*
 
 //////////////////////////////////////////////////////
 // TO DELETE THE REST HERE WHEN IT IS MOVED OVER
 /////////////////////////////////////////////////////
 
-
-
-const uri = 'mongodb://localhost:27017';
-const client = new MongoClient(uri);
-// Connexion à MongoDB
-client.connect()
-  .then(() => {
-    console.log('Connecté à MongoDB');
-    // Définition de la collection "users"
-    db = client.db('evaluetonsavoir');
-    usersCollection = db.collection('users');
-    foldersCollection = db.collection('folders');
-  })
-  .catch(err => console.error('erreur de connexion MongoDB :', err));
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'infoevaluetonsavoir@gmail.com', // Adresse courriel Gmail utilisée pour l'envoi
-    pass: 'vvml wmfr dkzb vjzb' // Mot de passe de votre adresse courriel Gmail
-  }
-});
-
-
-
-
-
-
-
-//Fonction pour enregistrer un nouvel usager 
-app.post('/register', async (req, res) => {
-
-  if (!req.body || !req.body.email || !req.body.password) {
-    return res.status(400).json({ message: 'Il manque un courriel ou un mot de passe' });
-  }
-
-  const { email, password } = req.body;
-  const existingUser = await usersCollection.findOne({ email });
-
-  if (existingUser) {
-    return res.status(400).json({ message: 'L\'utilisateur existe déjà' });
-  }
-  //hashage du mot de passe
-  const hashedPassword = await bcrypt.hash(password, 10);
-  //ajout de l'usager
-  await usersCollection.insertOne({ email, password: hashedPassword });
-
-  //envoi d'un courriel à l'usager pour confirmer la création du compte  
-  transporter.sendMail({
-    from: 'infoevaluetonsavoir@gmail.com',
-    to: email,
-    subject: 'Confirmation de compte',
-    text: 'Votre compte a été créé avec succès.'
-  });
-
-  res.status(201).json({ message: 'Utilisateur créé avec succès' });
-});
-
-//Fonction pour la connexion
-app.post('/login', async (req, res) => {
-
-  if (!req.body || !req.body.email || !req.body.password) {
-    return res.status(400).json({ message: 'Il manque un courriel ou un mot de passe' });
-  }
-
-  const { email, password } = req.body;
-  //Trouver l'usager dans la BD
-  const user = await usersCollection.findOne({ email });
-
-  if (!user) {
-    return res.status(404).json({ message: 'l\'utilisateur ou le mot de passe son incorrect' });
-  }
-  //Vérification de la correspondance du mot de passe 
-  const passwordMatch = await bcrypt.compare(password, user.password);
-  if (!passwordMatch) {
-    return res.status(401).json({ message: 'l\'utilisateur ou le mot de passe son incorrect' });
-  }
-
-  res.status(200).json({ message: 'Connexion réussie' });
-});
-
-//Fonction pour réinitialiser le mot de passe
-app.post('/reset-password', async (req, res) => {
-  const { email } = req.body;
-  const newPassword = Math.random().toString(36).slice(-8); // Générer un nouveau mot de passe temporaire
-  const hashedPassword = await bcrypt.hash(newPassword, 10); // Hasher le nouveau mot de passe
-
-  try {
-    // Mettre à jour le mot de passe de l'utilisateur 
-    await usersCollection.updateOne({ email }, { $set: { password: hashedPassword } });
-
-    //envoi d'un courriel à l'usager pour confirmer le changement du mot de passe  
-    transporter.sendMail({
-      from: 'infoevaluetonsavoir@gmail.com',
-      to: email,
-      subject: 'Réinitialisation du mot de passe',
-      text: `Votre nouveau mot de passe temporaire est : ${newPassword}`
-    });
-
-    res.status(200).json({ message: 'Nouveau mot de passe envoyé par courriel' });
-
-  } catch (error) {
-
-    console.error('Erreur lors de la réinitialisation du mot de passe :', error);
-    res.status(500).json({ message: 'Erreur interne du serveur' });
-
-  }
-});
 
 //Fonction pour changer le mot de passe 
 app.post('/change-password', async (req, res) => {
@@ -343,3 +235,4 @@ app.post('/duplicate-folder-to-user/:folderId', async (req, res) => {
     
   }
 });
+*/

@@ -18,11 +18,20 @@ class Emailer {
     }
 
     registerConfirmation(email) {
-        transporter.sendMail({
+        this.transporter.sendMail({
             from: this.senderEmail,
             to: email,
             subject: 'Confirmation de compte',
             text: 'Votre compte a été créé avec succès.'
+        });
+    }
+
+    newPasswordConfirmation(email,newPassword) {
+        this.transporter.sendMail({
+            from: this.senderEmail,
+            to: email,
+            subject: 'Mot de passe temporaire',
+            text: 'Votre nouveau mot de passe temporaire est : ' +  newPassword
         });
     }
 
