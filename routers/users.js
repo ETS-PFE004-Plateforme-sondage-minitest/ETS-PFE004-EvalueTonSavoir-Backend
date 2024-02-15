@@ -135,5 +135,31 @@ router.route("/change-password")
         }
 
     });
+    router.route("/delete-user")
+    .delete(async (req, res) => {
+        const { email, password } = req.body;
 
+        try {
+            const conn = db.getConnection();
+            const user = await conn.collection('users').findOne({ email });
+            if (!user) {
+                throw new Error("L'utilisateur n'existe pas");
+            }
+            // Vérifier si le mot de passe est correct
+            const passwordMatch = await bcrypt.compare(password, user.password);
+            if (!passwordMatch) {
+                throw new Error("Mot de passe incorrect");
+            }
+
+            // Supprimer l'utilisateur de la base de données
+            await conn.collection('users').deleteOne({ email });
+            res.json(Response.ok("Utilisateur supprimé avec succès"));
+
+        } catch (error) {
+            if (error.message === "L'utilisateur n'existe pas" || error.message === "Mot de passe incorrect") {
+                return res.status(404).json(Response.badRequest(error.message));
+            }
+            res.status(500).json(Response.serverError(error.message));
+        }
+    });
 module.exports = router;

@@ -8,18 +8,18 @@ const { ObjectId } = require('mongodb');
 router.route("/create")
     .post(async (req, res) => {
         const { userId, longText } = req.body;
-        if (!userId || !longText) {
-            throw new Error("il manque un texte ou un id dutilisateur");
-        }
-        //Trouver un utilisateur par son ID
-        const conn = db.getConnection();
-        const existingUser = await conn.collection('users').findOne({ _id: new ObjectId(userId) });
-        if (!existingUser) {
-            throw new Error("l'utilisateur est incorrect");
-        }
+
         //Ajouter un folder à un utilisateur 
         try {
-
+            if (!userId || !longText) {
+                throw new Error("il manque un texte ou un id dutilisateur");
+            }
+            //Trouver un utilisateur par son ID
+            const conn = db.getConnection();
+            const existingUser = await conn.collection('users').findOne({ _id: new ObjectId(userId) });
+            if (!existingUser) {
+                throw new Error("l'utilisateur est incorrect");
+            }
             await conn.collection('folders').insertOne({ userId: new ObjectId(userId), longText });
             res.json(Response.ok("Dossier créé"));
 
@@ -70,7 +70,7 @@ router.route("/getByUserId/:userId")
 
             //Trouver les folders d'un utilisateur  en fonction de son Id
             const conn = db.getConnection();
-            const userFolders = await conn.collection('folders').find({ userId: new ObjectId(userId) }).toArray();
+            const userFolders = await conn.collection('folders').find({ userId: userId }).toArray();
             if (!userFolders) {
                 throw new Error("Aucun dossier trouvé");
             }
@@ -130,7 +130,7 @@ router.route("/copy/:folderId")
             //Suppression du id du folder pour ne pas le répliquer 
             delete folderToDuplicate._id;
             //Ajout du duplicata
-            await conn.collection('folders').insertOne({ ...folderToDuplicate, userId: new ObjectId(newUserId) });            
+            await conn.collection('folders').insertOne({ ...folderToDuplicate, userId: new ObjectId(newUserId) });
             res.json(Response.ok("Dossier dupliqué avec succès pour un autre utilisateur"));
 
         } catch (error) {
@@ -141,5 +141,27 @@ router.route("/copy/:folderId")
         }
 
     });
+    router.route("/delete/:folderId")
+    .delete(async (req, res) => {
+        const { folderId } = req.params;
 
+        try {
+            // Trouver le dossier à supprimer
+            const conn = db.getConnection();
+            const folderToDelete = await conn.collection('folders').findOne({ _id: new ObjectId(folderId) });
+            if (!folderToDelete) {
+                throw new Error("Dossier non trouvé");
+            }
+
+            // Supprimer le dossier de la base de données
+            await conn.collection('folders').deleteOne({ _id: new ObjectId(folderId) });
+            res.json(Response.ok("Dossier supprimé avec succès"));
+
+        } catch (error) {
+            if (error.message.startsWith("Dossier non trouvé")) {
+                return res.status(404).json(Response.badRequest(error.message));
+            }
+            res.status(500).json(Response.serverError(error.message));
+        }
+    });
 module.exports = router;
