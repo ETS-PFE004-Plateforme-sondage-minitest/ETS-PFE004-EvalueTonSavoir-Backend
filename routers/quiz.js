@@ -7,42 +7,36 @@ const { ObjectId } = require('mongodb');
 // Créer un nouveau quiz
 router.route("/create")
     .post(async (req, res) => {
-        const { userId, longText, folderId } = req.body;
-
-        //Ajouter un quizz à un folder 
+        const { userId, quiz } = req.body;
+       
         try {
-            if (!userId || !longText || !folderId) {
-                throw new Error("il manque un texte, un id dutilisateur ou un dossier");
+            if (!userId || !quiz) {
+                throw new Error("Il manque l'identifiant de l'utilisateur ou le quiz.");
             }
-            //Trouver un utilisateur par son ID
+
+            const { id, title, questions = [] } = quiz;
+
+            // Assurez-vous que l'utilisateur existe
             const conn = db.getConnection();
             const existingUser = await conn.collection('users').findOne({ _id: new ObjectId(userId) });
-            const existingfolder = await conn.collection('folders').findOne({ _id: new ObjectId(folderId), userId: new ObjectId(userId) });
             if (!existingUser) {
-                throw new Error("l'utilisateur est incorrect");
+                throw new Error("L'utilisateur est incorrect.");
             }
-            if (!existingfolder) {
-                throw new Error("le dossier n'existe pas");
-            }
-            await conn.collection('quiz').insertOne({ userId: new ObjectId(userId), folderId, longText });
-            res.json(Response.ok("quiz créé"));
+
+            // Insérer le quiz dans la base de données avec l'ID fourni par TypeScript
+            await conn.collection('quiz').insertOne({ _id: id, userId:  new ObjectId(userId), title, questions });
+
+            res.json(Response.ok("Quiz créé avec succès."));
 
         } catch (error) {
-            if (error.message.startsWith("il manque un texte, un id dutilisateur ou un dossier")) {
+            if (error.message.startsWith("Il manque l'identifiant de l'utilisateur ou le quiz.")) {
                 return res.status(400).json(Response.badRequest(error.message));
             }
-            if (error.message.startsWith("l'utilisateur est incorrect")) {
-                return res.status(404).json(Response.badRequest(error.message));
-            }
-            if (error.message.startsWith("le dossier n'existe pas")) {
+            if (error.message.startsWith("L'utilisateur est incorrect.")) {
                 return res.status(404).json(Response.badRequest(error.message));
             }
             res.status(500).json(Response.serverError(error.message));
-
         }
-
-
-
     });
 
 // Récupérer un dossier par ID
@@ -53,7 +47,7 @@ router.route("/getById/:quizId")
         try {
             //Trouver un folder selon son id 
             const conn = db.getConnection();
-            const quiz = await conn.collection('quiz').findOne({ _id: new ObjectId(quizId) });
+            const quiz = await conn.collection('quiz').findOne({ _id: quizId });
             if (!quiz) {
                 throw new Error("Quiz non trouvé");
             }
@@ -61,6 +55,43 @@ router.route("/getById/:quizId")
 
         } catch (error) {
             if (error.message.startsWith("Quiz non trouvé")) {
+                return res.status(404).json(Response.badRequest(error.message));
+            }
+            res.status(500).json(Response.serverError(error.message));
+        }
+    });
+
+// Mettre à jour un quiz par ID
+router.route("/update/:quizId")
+    .put(async (req, res) => {
+        const { quizId } = req.params;
+        const { userId, title,questions= [] } = req.body;
+       
+        try {
+            if (!userId ) {
+                throw new Error("Il manque l'identifiant de l'utilisateur");
+            }            
+
+            // Assurez-vous que l'utilisateur existe
+            const conn = db.getConnection();
+            const existingUser = await conn.collection('users').findOne({ _id: new ObjectId(userId) });
+            if (!existingUser) {
+                throw new Error("L'utilisateur est incorrect.");
+            }
+
+            // Mettre à jour le quiz dans la base de données
+            await conn.collection('quiz').updateOne(
+                { _id: quizId }, // Critère de recherche
+                { $set: { userId: new ObjectId(userId), title, questions } } // Nouvelles valeurs à mettre à jour
+            );
+
+            res.json(Response.ok("Quiz mis à jour avec succès."));
+
+        } catch (error) {
+            if (error.message.startsWith("Il manque l'identifiant de l'utilisateur")) {
+                return res.status(400).json(Response.badRequest(error.message));
+            }
+            if (error.message.startsWith("L'utilisateur est incorrect.")) {
                 return res.status(404).json(Response.badRequest(error.message));
             }
             res.status(500).json(Response.serverError(error.message));
@@ -93,20 +124,49 @@ router.route("/getByfolderId/:folderId")
 
     });
 
+    router.route("/getAllByUserId/:userId")
+    .get(async (req, res) => {
+        const { userId } = req.params;
+
+        try {
+           // console.log(userId);
+            // Find all quizzes of a user based on their ID
+            const conn = db.getConnection();
+            const userQuizzes = await conn.collection('quiz').find({ userId: new ObjectId(userId) }).toArray();
+           // console.log(userQuizzes);
+
+            if (userQuizzes.length === 0) {
+                throw new Error("No quizzes found for this user");
+            }
+
+            res.status(200).json({ quizzes: userQuizzes }); // Return quizzes as part of a JSON object
+
+        } catch (error) {
+            console.error('Error fetching quizzes:', error);
+            res.status(404).json({ error: error.message }); // Return error message in JSON format
+        }
+    });
+
 // Dupliquer un dossier
 router.route("/duplicate/:quizId")
     .post(async (req, res) => {
         const { quizId } = req.params;
+        const {  quiz } = req.body;
 
         try {
             //Trouver le quizz a dupliquer 
             const conn = db.getConnection();
-            const quiztoduplicate = await conn.collection('quiz').findOne({ _id: new ObjectId(quizId) });
+            const quiztoduplicate = await conn.collection('quiz').findOne({ _id: quizId });
             if (!quiztoduplicate) {
                 throw new Error("quiz non trouvé");
             }
-            //Suppression du id du folder pour ne pas le répliquer 
-            delete quiztoduplicate._id;
+            
+            //changement du id du folder pour ne pas le répliquer 
+            const { _id, title, questions = [] } = quiz;
+            console.log(_id);
+            quiztoduplicate._id = _id;
+            quiztoduplicate.title = title;
+            
             //Ajout du duplicata
             await conn.collection('quiz').insertOne({ ...quiztoduplicate });
             res.json(Response.ok("quiz dupliqué"));
@@ -148,19 +208,19 @@ router.route("/copy/:quizId")
         }
 
     });
-    router.route("/delete/:quizId")
+router.route("/delete/:quizId")
     .delete(async (req, res) => {
         const { quizId } = req.params;
 
         try {
             // Trouver le quiz à supprimer
             const conn = db.getConnection();
-            const quizToDelete = await conn.collection('quiz').findOne({ _id: new ObjectId(quizId) });
+            const quizToDelete = await conn.collection('quiz').findOne({ _id: quizId });
             if (!quizToDelete) {
                 throw new Error("Quiz non trouvé");
             }
             // Supprimer le quiz
-            await conn.collection('quiz').deleteOne({ _id: new ObjectId(quizId) });
+            await conn.collection('quiz').deleteOne({ _id: quizId });
             res.json(Response.ok("Quiz supprimé avec succès"));
 
         } catch (error) {
@@ -171,7 +231,7 @@ router.route("/copy/:quizId")
         }
     });
 
-    router.route("/changeQuizFolder/:quizId/:newFolderId")
+router.route("/changeQuizFolder/:quizId/:newFolderId")
     .put(async (req, res) => {
         const { quizId, newFolderId } = req.params;
 
