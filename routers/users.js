@@ -4,11 +4,9 @@ const Response = require('./response.js');
 const db = require('../config/db.js');
 const emailer = require('../config/email.js');
 const bcrypt = require('bcrypt');
+const jwt = require('../config/jwtToken.js');
 
-
-// Enregistrer un nouvel usager 
-router.route("/register")
-    .post(async (req, res) => {
+router.post("/register", async (req, res) => {
         const { email, password } = req.body;
 
         try {
@@ -38,22 +36,20 @@ router.route("/register")
                 return res.status(400).json(Response.badRequest(error.message));
             }
 
-            res.status(500).json(Response.serverError(error.message));
+            res.status(500).json(Response.serverError("Oups"));
         }
 
     });
 
-// Connection d'un utilisateur
-router.route("/login")
-    .post(async (req, res) => {
+router.post("/login", async (req, res) => {
         const { email, password } = req.body;
 
         try {
 
-            if (!req.body || !req.body.email || !req.body.password) {
+            if (!email || !password) {
                 throw new Error("Il manque un courriel ou un mot de passe");
             }
-            const { email, password } = req.body;
+            
             //Trouver l'usager dans la BD
             const conn = db.getConnection();
             const user = await conn.collection('users').findOne({ email });
@@ -61,13 +57,17 @@ router.route("/login")
             if (!user) {
                 throw new Error("l'utilisateur ou le mot de passe son incorrect");
             }
+
             //Vérification de la correspondance du mot de passe 
             const passwordMatch = await bcrypt.compare(password, user.password);
+
             if (!passwordMatch) {
                 throw new Error("l'utilisateur ou le mot de passe son incorrect");
             }
 
-            res.json(Response.ok("Connection réussi"));
+            const token = jwt.create(email);
+
+            res.json(Response.ok({token:token,id:""}));
 
         } catch (error) {
             if (error.message.startsWith("Il manque un courriel ou un mot de passe")) {
@@ -76,14 +76,12 @@ router.route("/login")
             if (error.message.startsWith("l'utilisateur ou le mot de passe son incorrect")) {
                 return res.status(404).json(Response.badRequest(error.message));
             }
-            res.status(500).json(Response.serverError(error.message));
+            res.status(500).json(Response.serverError("Oups"));
         }
 
     });
 
-// Réinitialiser le mot de passe
-router.route("/reset-password")
-    .post(async (req, res) => {
+router.post("/reset-password", async (req, res) => {
         const { email } = req.body;
 
         try {
@@ -98,14 +96,12 @@ router.route("/reset-password")
             res.json(Response.ok("Nouveau mot de passe envoyé par courriel"));
 
         } catch (error) {
-            res.status(500).json(Response.serverError(error.message));
+            res.status(500).json(Response.serverError("Oups"));
         }
 
     });
 
-// Changer le mot de passe
-router.route("/change-password")
-    .post(async (req, res) => {
+router.post("/change-password", jwt.authenticateToken, async (req, res) => {
         const { email, oldPassword, newPassword } = req.body;
 
         try {
@@ -131,12 +127,12 @@ router.route("/change-password")
             if (error.message.startsWith("l'utilisateur ou le mot de passe son incorrect")) {
                 return res.status(404).json(Response.badRequest(error.message));
             }
-            res.status(500).json(Response.serverError(error.message));
+            res.status(500).json(Response.serverError("Oups"));
         }
 
     });
-    router.route("/delete-user")
-    .delete(async (req, res) => {
+
+router.delete("/delete-user", jwt.authenticateToken, async (req, res) => {
         const { email, password } = req.body;
 
         try {
@@ -159,7 +155,8 @@ router.route("/change-password")
             if (error.message === "L'utilisateur n'existe pas" || error.message === "Mot de passe incorrect") {
                 return res.status(404).json(Response.badRequest(error.message));
             }
-            res.status(500).json(Response.serverError(error.message));
+            res.status(500).json(Response.serverError("Oups"));
         }
     });
+
 module.exports = router;
