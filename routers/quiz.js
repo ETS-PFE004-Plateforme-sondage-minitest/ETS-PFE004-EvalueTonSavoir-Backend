@@ -97,7 +97,7 @@ router.put("/update/:quizId", jwt.authenticateToken, async (req, res) => {
 });
 
 // Récupérer les dossiers d'un utilisateur
-router.get("/getByfolderId/:folderId", jwt.authenticateToken, async (req, res) => {
+router.get("/getByFolderId/:folderId", jwt.authenticateToken, async (req, res) => {
     const { folderId } = req.params;
 
     try {
