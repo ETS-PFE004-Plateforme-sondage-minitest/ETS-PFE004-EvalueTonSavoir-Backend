@@ -16,14 +16,13 @@ class DBConnection {
         this.connection = await client.connect();
     }
 
-    getConnection() {     
+    getConnection() {
         if (!this.connection) {
-            throw new Error('MongoDB connection not established');
-          }  
+            throw new Error('Connexion MongoDB non établie');
+        }
         return this.connection.db(this.databaseName);
     }
 }
 
 const instance = new DBConnection();
-instance.connect(); 
 module.exports = instance;
