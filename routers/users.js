@@ -6,157 +6,183 @@ const emailer = require('../config/email.js');
 const bcrypt = require('bcrypt');
 const jwt = require('../config/jwtToken.js');
 
+async function login(email, password) {
+    await db.connect()
+    const conn = db.getConnection();
+
+    const userCollection = conn.collection('users');
+
+    const user = await userCollection.findOne({ email: email });
+
+    if (!user) {
+        return false;
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+        return false;
+    }
+
+    return user;
+}
+
 router.post("/register", async (req, res) => {
-        const { email, password } = req.body;
+    const { email, password } = req.body;
 
-        try {
-            if (!email || !password) {
-                throw new Error("Il manque un courriel ou un mot de passe");
-            }
-            const conn = db.getConnection();
-            const existingUser = await conn.collection('users').findOne({ email });
+    if (!email || !password) {
+        return res.status(400).json(Response.badRequest("Email and password are required."));
+    }
 
-            if (existingUser) {
-                throw new Error("L'utilisateur existe déjà");
-            }
+    try {
+        await db.connect()
+        const conn = db.getConnection();
 
-            const hashedPassword = await bcrypt.hash(password, 10);
-            conn.collection('users').insertOne({ email, password: hashedPassword });
+        const userCollection = conn.collection('users');
 
-            emailer.registerConfirmation(email)
+        const existingUser = await userCollection.findOne({ email: email });
 
-            res.json(Response.ok('Utilisateur créé avec succès'));
-
-        } catch (error) {
-            if (error.message.startsWith("Il manque un courriel")) {
-                return res.status(400).json(Response.badRequest(error.message));
-            }
-
-            if (error.message.startsWith("L'utilisateur existe déjà")) {
-                return res.status(400).json(Response.badRequest(error.message));
-            }
-
-            res.status(500).json(Response.serverError("Oups"));
+        if (existingUser) {
+            return res.status(400).json(Response.badRequest("User already exists."));
         }
 
-    });
+        const newUser = {
+            email: email,
+            password: await bcrypt.hash(password, 10),
+            created_at: new Date()
+        };
+
+        const insertResult = await userCollection.insertOne(newUser);
+
+        emailer.registerConfirmation(email)
+
+        return res.status(200).json(Response.ok('Utilisateur créé avec succès'));
+    }
+    catch (e) {
+        return res.status(505).json(Response.serverError(""));
+    }
+});
 
 router.post("/login", async (req, res) => {
-        const { email, password } = req.body;
+    const { email, password } = req.body;
 
-        try {
+    if (!email || !password) {
+        return res.status(400).json(Response.badRequest("Email and password are required."));
+    }
 
-            if (!email || !password) {
-                throw new Error("Il manque un courriel ou un mot de passe");
-            }
-            
-            //Trouver l'usager dans la BD
-            const conn = db.getConnection();
-            const user = await conn.collection('users').findOne({ email });
+    try {
+        const user = await login(email, password);
 
-            if (!user) {
-                throw new Error("l'utilisateur ou le mot de passe son incorrect");
-            }
-
-            //Vérification de la correspondance du mot de passe 
-            const passwordMatch = await bcrypt.compare(password, user.password);
-
-            if (!passwordMatch) {
-                throw new Error("l'utilisateur ou le mot de passe son incorrect");
-            }
-
-            const token = jwt.create(email);
-
-            res.json(Response.ok({token:token,id:""}));
-
-        } catch (error) {
-            if (error.message.startsWith("Il manque un courriel ou un mot de passe")) {
-                return res.status(400).json(Response.badRequest(error.message));
-            }
-            if (error.message.startsWith("l'utilisateur ou le mot de passe son incorrect")) {
-                return res.status(404).json(Response.badRequest(error.message));
-            }
-            res.status(500).json(Response.serverError("Oups"));
+        if (!user) {
+            return res.status(400).json(Response.badRequest("Email and password does not match."));
         }
 
-    });
+        const token = jwt.create(email);
+
+        return res.status(200).json(Response.ok(
+            {
+                token: token,
+                id: user.email
+            }));
+    }
+    catch (e) {
+        return res.status(505).json(Response.serverError(""));
+    }
+
+});
 
 router.post("/reset-password", async (req, res) => {
-        const { email } = req.body;
+    const { email } = req.body;
 
-        try {
-            const newPassword = Math.random().toString(36).slice(-8); // Générer un nouveau mot de passe temporaire
-            const hashedPassword = await bcrypt.hash(newPassword, 10); // Hasher le nouveau mot de passe
-            // Mettre à jour le mot de passe de l'utilisateur 
-            const conn = db.getConnection();
-            await conn.collection('users').updateOne({ email }, { $set: { password: hashedPassword } });
+    if (!email) {
+        return res.status(400).json(Response.badRequest("Email is required."));
+    }
 
-            //envoi d'un courriel à l'usager pour confirmer le changement du mot de passe  
-            emailer.newPasswordConfirmation(email, newPassword);
-            res.json(Response.ok("Nouveau mot de passe envoyé par courriel"));
+    try {
+        const newPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        } catch (error) {
-            res.status(500).json(Response.serverError("Oups"));
+        await db.connect()
+        const conn = db.getConnection();
+
+        const userCollection = conn.collection('users');
+
+        const result = await userCollection.updateOne({ email }, { $set: { password: hashedPassword } });
+
+        if (result.modifiedCount != 1) {
+            throw new Error("something whent wrong while updating password")
         }
 
-    });
+        emailer.newPasswordConfirmation(email, newPassword);
+
+        return res.status(400).json(Response.ok("Nouveau mot de passe envoyé par courriel"));
+
+    } catch (error) {
+        return res.status(505).json(Response.serverError(""));
+    }
+
+});
 
 router.post("/change-password", jwt.authenticateToken, async (req, res) => {
-        const { email, oldPassword, newPassword } = req.body;
+    const { email, oldPassword, newPassword } = req.body;
 
-        try {
-            const conn = db.getConnection();
-            const user = await conn.collection('users').findOne({ email });
-            if (!user) {
-                throw new Error("l'utilisateur ou le mot de passe son incorrect");
-            }
-            //comparer le mot de passe actuel avec celui donner par l'utilisateur
-            const passwordMatch = await bcrypt.compare(oldPassword, user.password);
-            if (!passwordMatch) {
-                throw new Error("l'utilisateur ou le mot de passe son incorrect");
-            }
-            // Hasher le nouveau mot de passe
-            const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    if (!email || !oldPassword || !newPassword) {
+        return res.status(400).json(Response.badRequest("Email, oldPassword and newPassword are required."));
+    }
 
-            //Chnager le mot de passe dans la BD
-            await conn.collection('users').updateOne({ email }, { $set: { password: hashedNewPassword } });
+    try {
+        const user = await login(email, oldPassword);
 
-            res.json(Response.ok("mot de passe changé avec succès"));
-
-        } catch (error) {
-            if (error.message.startsWith("l'utilisateur ou le mot de passe son incorrect")) {
-                return res.status(404).json(Response.badRequest(error.message));
-            }
-            res.status(500).json(Response.serverError("Oups"));
+        if (!user) {
+            return res.status(400).json(Response.badRequest("Email and password does not match."));
         }
 
-    });
+        await db.connect()
+        const conn = db.getConnection();
 
-router.delete("/delete-user", jwt.authenticateToken, async (req, res) => {
-        const { email, password } = req.body;
+        const userCollection = conn.collection('users');
 
-        try {
-            const conn = db.getConnection();
-            const user = await conn.collection('users').findOne({ email });
-            if (!user) {
-                throw new Error("L'utilisateur n'existe pas");
-            }
-            // Vérifier si le mot de passe est correct
-            const passwordMatch = await bcrypt.compare(password, user.password);
-            if (!passwordMatch) {
-                throw new Error("Mot de passe incorrect");
-            }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-            // Supprimer l'utilisateur de la base de données
-            await conn.collection('users').deleteOne({ email });
-            res.json(Response.ok("Utilisateur supprimé avec succès"));
+        const result = await userCollection.updateOne({ email }, { $set: { password: hashedPassword } });
 
-        } catch (error) {
-            if (error.message === "L'utilisateur n'existe pas" || error.message === "Mot de passe incorrect") {
-                return res.status(404).json(Response.badRequest(error.message));
-            }
-            res.status(500).json(Response.serverError("Oups"));
+        if (result.modifiedCount != 1) {
+            throw new Error("something whent wrong while updating password")
         }
-    });
+
+        return res.status(400).json(Response.ok("mot de passe changé avec succè"));
+
+    } catch (error) {
+        return res.status(505).json(Response.serverError(""));
+    }
+
+});
+
+// router.delete("/delete-user", jwt.authenticateToken, async (req, res) => {
+//         const { email, password } = req.body;
+
+//         try {
+//             const conn = db.getConnection();
+//             const user = await conn.collection('users').findOne({ email });
+//             if (!user) {
+//                 throw new Error("L'utilisateur n'existe pas");
+//             }
+//             // Vérifier si le mot de passe est correct
+//             const passwordMatch = await bcrypt.compare(password, user.password);
+//             if (!passwordMatch) {
+//                 throw new Error("Mot de passe incorrect");
+//             }
+
+//             // Supprimer l'utilisateur de la base de données
+//             await conn.collection('users').deleteOne({ email });
+//             res.json(Response.ok("Utilisateur supprimé avec succès"));
+
+//         } catch (error) {
+//             if (error.message === "L'utilisateur n'existe pas" || error.message === "Mot de passe incorrect") {
+//                 return res.status(404).json(Response.badRequest(error.message));
+//             }
+//             res.status(500).json(Response.serverError("Oups"));
+//         }
+//     });
 
 module.exports = router;
