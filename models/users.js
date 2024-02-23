@@ -87,7 +87,6 @@ class Users {
 
         const result = await userCollection.deleteOne({ email });
 
-        console.log(result)
         if (result.deletedCount != 1) return false;
 
         return true;
