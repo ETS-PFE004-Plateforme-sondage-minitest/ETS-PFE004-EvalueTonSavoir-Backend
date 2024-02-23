@@ -22,7 +22,7 @@ class Token {
         jwt.verify(token, process.env.JWT_SECRET, (err, email) => {
             if (err) Response.unauthorized("Accès refusé. Jeton invalide.");
     
-            req.email = email;
+            req.user = email;
 
             next();
         });
