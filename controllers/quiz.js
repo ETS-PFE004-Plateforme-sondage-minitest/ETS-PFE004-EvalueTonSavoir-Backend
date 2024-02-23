@@ -145,7 +145,7 @@ class QuizController {
             const result = await model.move(quizId, newFolderId);
 
             if (!result) {
-                throw new Error("something whent wrong while deleting quiz.")
+                throw new Error("something whent wrong while moving quiz.")
             }
 
             return Response.ok(res, "Quiz a été déplacé avec succès");

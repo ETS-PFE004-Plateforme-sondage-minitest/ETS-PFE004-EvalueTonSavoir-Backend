@@ -104,7 +104,6 @@ class Users {
             return false;
         }
 
-        console.log(user._id)
         return user._id;
     }
 

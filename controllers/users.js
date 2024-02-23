@@ -38,7 +38,6 @@ class UsersController {
 
         try {
             const user = await model.login(email, password);
-            console.log(user);
 
             if (!user) {
                 return Response.badRequest(res, "Email and password does not match.");
