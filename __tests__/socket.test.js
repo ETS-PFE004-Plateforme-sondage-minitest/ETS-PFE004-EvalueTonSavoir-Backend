@@ -1,7 +1,7 @@
 const http = require("http");
 const { Server } = require("socket.io");
 const Client = require("socket.io-client");
-const { setupWebsocket } = require("../src/socket/socket");
+const { setupWebsocket } = require("../socket/socket");
 
 process.env.NODE_ENV = "test";
 
