@@ -93,6 +93,22 @@ class Users {
         return true;
     }
 
+    async getId(email) {
+        await db.connect()
+        const conn = db.getConnection();
+
+        const userCollection = conn.collection('users');
+
+        const user = await userCollection.findOne({ email: email });
+
+        if (!user) {
+            return false;
+        }
+
+        console.log(user._id)
+        return user._id;
+    }
+
 }
 
 module.exports = new Users;
