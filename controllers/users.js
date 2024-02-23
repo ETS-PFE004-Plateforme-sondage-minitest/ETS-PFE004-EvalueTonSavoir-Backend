@@ -38,12 +38,13 @@ class UsersController {
 
         try {
             const user = await model.login(email, password);
+            console.log(user);
 
             if (!user) {
                 return Response.badRequest(res, "Email and password does not match.");
             }
 
-            const token = jwt.create(email);
+            const token = jwt.create(user.email, user._id);
 
             return Response.ok(res, 
                 {

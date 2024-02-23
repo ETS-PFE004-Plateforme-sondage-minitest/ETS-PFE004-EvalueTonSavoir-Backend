@@ -10,8 +10,8 @@ class Token {
         
     }
 
-    create(email) {
-        return jwt.sign({ email }, process.env.JWT_SECRET);
+    create(email, userId) {
+        return jwt.sign({ email, userId }, process.env.JWT_SECRET);
     }
 
     authenticate(req, res, next) {
@@ -19,10 +19,10 @@ class Token {
         
         if (!token) Response.unauthorized(res, 'Accès refusé. Aucun jeton fourni');
     
-        jwt.verify(token, process.env.JWT_SECRET, (err, email) => {
+        jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
             if (err) Response.unauthorized("Accès refusé. Jeton invalide.");
     
-            req.user = email;
+            req.user = payload;
 
             next();
         });
