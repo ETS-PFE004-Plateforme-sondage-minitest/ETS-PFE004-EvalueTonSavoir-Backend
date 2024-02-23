@@ -11,7 +11,7 @@ const { Server } = require("socket.io");
 const userRouter = require('./routers/users.js');
 const folderRouter = require('./routers/folders.js');
 const quizRouter = require('./routers/quiz.js');
-const imageRouter = require('./routers/images.js')
+const imagesRouter = require('./routers/images.js')
 
 // Setup environement
 dotenv.config();
@@ -46,7 +46,7 @@ app.use(bodyParser.json());
 app.use('/user', userRouter);
 app.use('/folder', folderRouter);
 app.use('/quiz', quizRouter);
-app.use('/image', imageRouter);
+app.use('/image', imagesRouter);
 
 // Start server
 async function start() {
