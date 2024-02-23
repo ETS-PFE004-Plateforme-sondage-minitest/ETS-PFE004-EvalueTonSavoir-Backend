@@ -35,7 +35,7 @@ class Folders {
         return result;
     }
 
-    async getFolderOwner(folderId) {
+    async getOwner(folderId) {
         await db.connect()
         const conn = db.getConnection();
 
@@ -61,7 +61,6 @@ class Folders {
         await db.connect()
         const conn = db.getConnection();
 
-        // Delete folder
         const foldersCollection = conn.collection('folders');
 
         const folderResult = await foldersCollection.deleteOne({ _id: new ObjectId(folderId) });

@@ -55,7 +55,7 @@ class FoldersController {
 
         try {
             // Is this folder mine
-            const owner = await model.getFolderOwner(folderId);
+            const owner = await model.getOwner(folderId);
 
             if(owner != req.user.userId) {
                 return Response.notFound(res, 'No folder with this id was found.');
@@ -84,7 +84,7 @@ class FoldersController {
 
         try {
             // Is this folder mine
-            const owner = await model.getFolderOwner(folderId);
+            const owner = await model.getOwner(folderId);
 
             if(owner != req.user.userId) {
                 return Response.notFound(res, 'No folder with this id was found.');
@@ -113,7 +113,7 @@ class FoldersController {
 
         try {
             // Is this folder mine
-            const owner = await model.getFolderOwner(folderId);
+            const owner = await model.getOwner(folderId);
 
             if(owner != req.user.userId) {
                 return Response.notFound(res, 'No folder with this id was found.');
