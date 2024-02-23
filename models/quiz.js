@@ -74,6 +74,19 @@ class Quiz {
 
         return true
     }
+
+    async move(quizId, newFolderId) {
+        await db.connect()
+        const conn = db.getConnection();
+
+        const quizCollection = conn.collection('files');
+
+        const result = await quizCollection.updateOne({ _id: new ObjectId(quizId) }, { $set: { folderId: newFolderId } });
+
+        if (result.modifiedCount != 1) return false;
+
+        return true
+    }
     
 }
 

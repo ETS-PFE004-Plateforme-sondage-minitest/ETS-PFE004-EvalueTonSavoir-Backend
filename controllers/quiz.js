@@ -121,35 +121,40 @@ class QuizController {
     }
 
     async move(req, res) {
-        const { quizId, newFolderId } = req.params;
+        const { quizId, newFolderId } = req.body;
 
         if (!quizId || !newFolderId) {
             return Response.badRequest(res, "QuizId and newFolderId are required.");
         }
 
-        return Response.serverError(res, "NOT IMPLEMENTED");
+        try {
+            // Is this quiz mine
+            const quizOwner = await model.getOwner(quizId);
 
-        // try {
-        //     // Vérifier si les IDs de quiz et de dossier sont fournis
-        //     if (!quizId || !newFolderId) {
-        //         throw new Error("ID de quiz ou de dossier manquant");
-        //     }
+            if (quizOwner != req.user.userId) {
+                return Response.notFound(res, 'No quiz with this id was found.');
+            }
 
-        //     // Vérifier si le quiz existe
-        //     const conn = db.getConnection();
-        //     const quiz = await conn.collection('quiz').findOne({ _id: new ObjectId(quizId) });
-        //     if (!quiz) {
-        //         throw new Error("Quiz non trouvé");
-        //     }
+            // Is this folder mine
+            const folderOwner = await folderModel.getOwner(newFolderId);
 
-        //     // Mettre à jour le dossier du quiz avec le nouvel ID de dossier
-        //     await conn.collection('quiz').updateOne({ _id: new ObjectId(quizId) }, { $set: { folderId: newFolderId } });
+            if (folderOwner != req.user.userId) {
+                return Response.notFound(res, 'No folder with this id was found.');
+            }
 
-        //     res.json(Response.ok("Dossier du quiz modifié avec succès"));
-        // } catch (e) {
-        //     console.log(e);
-        //     return Response.serverError("");
-        // }
+            const result = await model.move(quizId, newFolderId);
+
+            if (!result) {
+                throw new Error("something whent wrong while deleting quiz.")
+            }
+
+            return Response.ok(res, "Quiz a été déplacé avec succès");
+            
+        } catch (e) {
+            console.log(e);
+            return Response.serverError("");
+        }
+
     }
 
     async duplicate(req, res) {
