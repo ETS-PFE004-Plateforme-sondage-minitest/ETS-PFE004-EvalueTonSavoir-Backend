@@ -12,7 +12,7 @@ class ImagesController {
         }
 
         try {
-            const id = await model.upload(file);
+            const id = await model.upload(file, req.user.userId);
 
             return Response.ok(res, { id: id });
         }

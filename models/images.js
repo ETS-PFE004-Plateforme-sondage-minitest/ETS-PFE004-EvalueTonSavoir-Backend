@@ -3,13 +3,14 @@ const { ObjectId } = require('mongodb');
 
 class Images {
 
-    async upload(file) {
+    async upload(file, userId) {
         await db.connect()
         const conn = db.getConnection();
 
         const imagesCollection = conn.collection('images');
 
         const newImage = {
+            userId: userId,
             file_name: file.originalname,
             file_content: file.buffer.toString('base64'),
             mime_type: file.mimetype,
