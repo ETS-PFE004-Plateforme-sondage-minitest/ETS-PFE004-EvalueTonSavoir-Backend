@@ -1,4 +1,5 @@
 version: "3.8"
+
 services:
   app:
     build:
@@ -8,5 +9,26 @@ services:
     ports:
       - "4400:4400"
     environment:
-      - NODE_ENV=production
+      PORT: 4400
+      MONGO_URI: "mongodb://mongo:27017/evaluetonsavoir" # Utilisez ceci si aucune authentification n'est requise
+      MONGO_DATABASE: evaluetonsavoir
+      EMAIL_SERVICE: gmail
+      SENDER_EMAIL: infoevaluetonsavoir@gmail.com
+      EMAIL_PSW: 'vvml wmfr dkzb vjzb'
+      JWT_SECRET: haQdgd2jp09qb897GeBZyJetC8ECSpbFJe
+      VITE_BACKEND_URL: "http://localhost:4400" 
+      VITE_AZURE_BACKEND_URL: "http://localhost:4400" 
+    depends_on:
+      - mongo
     command: npm start
+
+  mongo:
+    image: mongo
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  mongodb_data:
+
