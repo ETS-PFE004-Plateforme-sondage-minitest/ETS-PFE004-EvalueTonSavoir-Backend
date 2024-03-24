@@ -16,8 +16,8 @@ services:
       SENDER_EMAIL: infoevaluetonsavoir@gmail.com
       EMAIL_PSW: 'vvml wmfr dkzb vjzb'
       JWT_SECRET: haQdgd2jp09qb897GeBZyJetC8ECSpbFJe
-      VITE_BACKEND_URL: "http://localhost:4400" 
-      VITE_AZURE_BACKEND_URL: "http://localhost:4400" 
+      VITE_BACKEND_URL: "http://10.196.10.69:4400" 
+      VITE_AZURE_BACKEND_URL: "http://10.196.10.69:4400" 
     depends_on:
       - mongo
     command: npm start
